@@ -1,0 +1,69 @@
+# ============================================
+# Knocket Inbox Agent 配置文件
+# 复制此文件为 config.toml 并填写你的配置
+# ============================================
+
+[general]
+# 检查间隔（秒），每隔多久扫描一次 inbox
+check_interval = 60
+
+# Chrome 远程调试端口
+chrome_debug_port = 9222
+
+# Knocket Inbox URL
+inbox_url = "https://console.trtc.io/knocket-inbox"
+
+[notification]
+# 是否启用企业微信通知（true / false）
+enabled = true
+
+# 企业微信群机器人 Webhook URL
+# 获取方式：企业微信群 → 群设置 → 群机器人 → 添加 → 复制 Webhook 地址
+wecom_webhook = ""
+
+[ai_reply]
+# 是否启用 AI 智能回复（true / false）
+# 关闭后将使用 fallback_reply 作为固定回复
+enabled = true
+
+# AI API 配置（支持 Anthropic 兼容接口）
+api_base_url = ""
+api_key = ""
+model = "claude-haiku-4-5-20251001"
+max_tokens = 300
+
+# AI 回复不可用时的兜底回复
+fallback_reply = "您好！感谢您的消息，我们已收到，稍后会为您处理。"
+
+[custom_rules]
+# 客服人设/角色设定（告诉 AI 它是谁）
+persona = "你是一个专业、友好的客服助手。"
+
+# 业务领域描述（告诉 AI 你是做什么的）
+business_context = ""
+# 示例："我们是一家设计工作室，主营品牌设计、UI/UX 设计、插画等服务。"
+
+# 自定义回复规则（AI 会遵循这些规则生成回复）
+# 每条规则写一行，用换行分隔
+reply_rules = """
+使用中文回复，语气亲切专业
+回复简洁有力，一般 1-3 句话即可
+不要使用 emoji
+不要自称"我是AI"或"我是机器人"
+遇到无法确定的具体信息（如价格、交期），表示会确认后回复，不要编造
+"""
+
+# 知识库内容（产品信息、常见问题等，AI 回复时会参考）
+# 支持多行文本，写入你的业务知识
+knowledge_base = """
+"""
+# 示例：
+# knowledge_base = """
+# Q: 你们的设计服务价格是多少？
+# A: 根据项目复杂度，品牌设计 5000-20000 元，UI 设计按页面计费 500-2000 元/页。
+#
+# Q: 设计周期是多久？
+# A: Logo 设计 3-5 个工作日，完整品牌设计 2-4 周，UI 设计根据页面数量 1-3 周。
+#
+# 我们的优势：10 年设计经验，服务过 200+ 客户，支持无限次修改直到满意。
+# """
