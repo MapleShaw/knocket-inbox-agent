@@ -24,20 +24,14 @@
 
 ## 怎么用？
 
-这是一个 [WorkBuddy](https://www.codebuddy.cn/) Skill，两种安装方式：
-
-### 方式一：WorkBuddy 里直接用
-
-把这个文件夹放到你项目的 `.workbuddy/skills/` 目录下：
+### 第一步：Clone 仓库
 
 ```bash
 git clone https://github.com/fangxinmoon/knocket-inbox-agent.git
-# 把 knocket-inbox-agent 文件夹移到你项目的 .workbuddy/skills/ 下
+cd knocket-inbox-agent
 ```
 
-然后在 WorkBuddy 里说"帮我配置 Knocket 客服"，它会引导你完成所有配置。
-
-### 方式二：手动运行
+### 第二步：启动
 
 1. 用调试端口启动 Chrome：
    ```bash
@@ -80,7 +74,7 @@ git clone https://github.com/fangxinmoon/knocket-inbox-agent.git
 
 ```
 knocket-inbox-agent/
-├── SKILL.md                         # WorkBuddy Skill 定义（给 AI 读的）
+├── SKILL.md                         # Skill 定义文件（详细技术文档）
 ├── README.md                        # 你正在看的这个（给人读的）
 ├── scripts/
 │   ├── wecom_auto.py                # 方案 A：企微全自动
