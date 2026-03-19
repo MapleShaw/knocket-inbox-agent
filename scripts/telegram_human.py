@@ -33,9 +33,13 @@ TG_API_BASE = f"https://api.telegram.org/bot{TG_BOT_TOKEN}"
 WECOM_WEBHOOK = os.environ.get("WECOM_WEBHOOK", "")
 
 # AI 配置
-API_BASE = os.environ.get("ANTHROPIC_BASE_URL", "")
-API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+# 支持两种 API 格式：anthropic（默认）和 openai（兼容 OpenAI/DeepSeek/通义千问等）
+AI_PROVIDER = os.environ.get("AI_PROVIDER", "anthropic")  # "anthropic" 或 "openai"
+API_BASE = os.environ.get("AI_BASE_URL", os.environ.get("ANTHROPIC_BASE_URL", ""))
+API_KEY = os.environ.get("AI_API_KEY", os.environ.get("ANTHROPIC_API_KEY", ""))
+MODEL = os.environ.get("AI_MODEL", os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"))
+# 可选：自定义请求头（JSON 格式，如 '{"X-Custom-Header": "value"}'）
+CUSTOM_HEADERS = os.environ.get("AI_CUSTOM_HEADERS", "")
 
 # 清除代理
 for key in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy", "ALL_PROXY"]:
@@ -586,6 +590,7 @@ class CDPConnection:
 # AI 智能回复
 # ============================================
 def generate_reply(session_name, messages):
+    """调用大模型生成智能回复，支持 Anthropic 和 OpenAI 两种 API 格式"""
     if not API_BASE or not API_KEY:
         return "您好！感谢您的消息，我们已收到，稍后会为您处理。"
     
@@ -608,31 +613,60 @@ def generate_reply(session_name, messages):
 8. 遇到无法确定的具体信息（如价格、交期），表示会确认后回复，不要编造
 
 只输出回复内容本身，不要加任何前缀、标签或解释。"""
+
+    user_content = f"以下是与客户「{session_name}」的对话记录：\n\n{conversation}\n\n请生成客服回复："
     
-    url = f"{API_BASE}/v1/messages"
-    payload = json.dumps({
-        "model": MODEL,
-        "max_tokens": 300,
-        "system": system_prompt,
-        "messages": [{
-            "role": "user",
-            "content": f"以下是与客户「{session_name}」的对话记录：\n\n{conversation}\n\n请生成客服回复："
-        }]
-    }).encode("utf-8")
+    # 根据 AI_PROVIDER 构建不同格式的请求
+    if AI_PROVIDER.lower() == "openai":
+        # OpenAI 兼容格式（适用于 OpenAI / DeepSeek / 通义千问 / 智谱 / Moonshot 等）
+        url = f"{API_BASE.rstrip('/')}/v1/chat/completions"
+        payload = json.dumps({
+            "model": MODEL,
+            "max_tokens": 300,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ]
+        }).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        }
+    else:
+        # Anthropic Messages API 格式（默认）
+        url = f"{API_BASE.rstrip('/')}/v1/messages"
+        payload = json.dumps({
+            "model": MODEL,
+            "max_tokens": 300,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": user_content}]
+        }).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": API_KEY,
+            "anthropic-version": "2023-06-01",
+            "Authorization": f"Bearer {API_KEY}"
+        }
     
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "Authorization": f"Bearer {API_KEY}",
-        "Venus-Sticky-Routing": "token"
-    }
+    # 添加自定义请求头（如果有）
+    if CUSTOM_HEADERS:
+        try:
+            extra = json.loads(CUSTOM_HEADERS)
+            headers.update(extra)
+        except:
+            log(f"⚠️ AI_CUSTOM_HEADERS 格式错误，忽略")
     
     try:
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            reply = result.get("content", [{}])[0].get("text", "").strip()
+            
+            # 解析响应（两种格式的返回结构不同）
+            if AI_PROVIDER.lower() == "openai":
+                reply = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            else:
+                reply = result.get("content", [{}])[0].get("text", "").strip()
+            
             if reply:
                 return reply.strip('"').strip("'").strip()
     except Exception as e:

@@ -85,13 +85,15 @@ cd <working_directory>
 export WECOM_WEBHOOK="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY"
 
 # 必填：AI API（如果需要智能回复）
-export ANTHROPIC_BASE_URL="https://your-api-endpoint"
-export ANTHROPIC_API_KEY="your-api-key"
+export AI_PROVIDER="anthropic"              # 或 "openai"（兼容 DeepSeek/通义千问/智谱等）
+export AI_BASE_URL="https://your-api-endpoint"
+export AI_API_KEY="your-api-key"
 
 # 可选
 export CHECK_INTERVAL="60"          # 检查间隔秒数，默认 60
 export CDP_PORT="9222"              # Chrome 调试端口，默认 9222
-export ANTHROPIC_MODEL="claude-haiku-4-5-20251001"  # 模型名
+export AI_MODEL="claude-haiku-4-5-20251001"  # 模型名
+export AI_CUSTOM_HEADERS=""         # 自定义请求头（JSON 格式，可选）
 
 # 启动
 export KNOCKET_WORK_DIR="$(pwd)"
@@ -158,14 +160,16 @@ export TG_BOT_TOKEN="your-bot-token-from-botfather"
 export TG_CHAT_ID="your-chat-id"
 
 # 必填：AI API（超时回复用）
-export ANTHROPIC_BASE_URL="https://your-api-endpoint"
-export ANTHROPIC_API_KEY="your-api-key"
+export AI_PROVIDER="anthropic"              # 或 "openai"
+export AI_BASE_URL="https://your-api-endpoint"
+export AI_API_KEY="your-api-key"
 
 # 可选
 export CHECK_INTERVAL="60"          # 检查间隔秒数，默认 60
 export HUMAN_WAIT_SECONDS="300"     # 等人工回复秒数，默认 300（5分钟）
 export CDP_PORT="9222"              # Chrome 调试端口，默认 9222
 export WECOM_WEBHOOK=""             # 企微 Webhook（可选，额外通知渠道）
+export AI_CUSTOM_HEADERS=""         # 自定义请求头（JSON 格式，可选）
 
 # 启动（⚠️ 必须用 > /dev/null，因为脚本内部自己写日志文件）
 export KNOCKET_WORK_DIR="$(pwd)"
@@ -309,7 +313,7 @@ bash <skill_dir>/scripts/setup.sh <working_directory>
 |---|---|---|
 | "没有会话" in log | Inbox 页面没加载或登录过期 | 刷新 inbox 页面，必要时重新登录 |
 | "未找到 inbox 标签页" | Chrome 标签页关了 | 确保 inbox 在 Chrome 中打开，检查 `curl http://127.0.0.1:9222/json/list` |
-| AI 回复是兜底文案 | API 配置缺失或无效 | 检查 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_API_KEY` 环境变量 |
+| AI 回复是兜底文案 | API 配置缺失或无效 | 检查 `AI_BASE_URL` 和 `AI_API_KEY` 环境变量，确认 `AI_PROVIDER` 设置正确 |
 | 没收到企微通知（方案A） | Webhook 没配 | 设置 `WECOM_WEBHOOK` 环境变量 |
 | 没收到 Telegram 通知（方案B） | Token 或 Chat ID 错误 | 用 `curl` 测试 Bot API 发消息 |
 | Telegram 回复没被检测到（方案B） | 超时太短 / 网络问题 | 加大 `HUMAN_WAIT_SECONDS`，检查网络 |

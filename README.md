@@ -44,16 +44,20 @@ cd knocket-inbox-agent
    ```bash
    # 方案 A（企微）
    export WECOM_WEBHOOK="你的企微群机器人 Webhook URL"
-   export ANTHROPIC_BASE_URL="你的 AI API 地址"
-   export ANTHROPIC_API_KEY="你的 API Key"
+   export AI_PROVIDER="anthropic"    # 或 "openai"（兼容 DeepSeek/通义千问/智谱等）
+   export AI_BASE_URL="你的 AI API 地址"
+   export AI_API_KEY="你的 API Key"
+   export AI_MODEL="你的模型名"      # 如 claude-haiku-4-5-20251001 / gpt-4o-mini / deepseek-chat
    export KNOCKET_WORK_DIR="$(pwd)"
    nohup python3 scripts/wecom_auto.py > /dev/null 2>&1 &
 
    # 方案 B（Telegram）
    export TG_BOT_TOKEN="你的 Telegram Bot Token"
    export TG_CHAT_ID="你的 Chat ID"
-   export ANTHROPIC_BASE_URL="你的 AI API 地址"
-   export ANTHROPIC_API_KEY="你的 API Key"
+   export AI_PROVIDER="anthropic"    # 或 "openai"
+   export AI_BASE_URL="你的 AI API 地址"
+   export AI_API_KEY="你的 API Key"
+   export AI_MODEL="你的模型名"
    export KNOCKET_WORK_DIR="$(pwd)"
    nohup python3 scripts/telegram_human.py > /dev/null 2>&1 &
    ```
