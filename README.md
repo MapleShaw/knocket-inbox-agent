@@ -1,26 +1,31 @@
 # Knocket Inbox Agent
 
-一行代码嵌入网页的 AI 智能客服——基于 [Knocket](https://console.trtc.io/knocket-inbox) 聊天组件，自动回复客户消息，实时通知到你的企业微信或 Telegram。
+一行代码嵌入网页的 AI 智能客服——基于 [Knocket](https://console.trtc.io/knocket-inbox) 聊天组件，自动回复客户消息，实时通知到你的微信、企业微信或 Telegram。
 
 ## 这是什么？
 
 [Knocket](https://console.trtc.io/knocket-inbox) 是一个免费的网页聊天小组件，一行代码就能在你的网站右下角加一个聊天气泡。这个 Skill 在 Knocket 的基础上加了一层 AI 智能客服能力：
 
 - 🤖 客户发消息 → AI 自动回复
-- 📱 同时通知到你的手机（企业微信 / Telegram）
+- 📱 同时通知到你的手机（微信 / 企业微信 / Telegram）
 - 👆 支持人工接管：你觉得 AI 回得不对，随时自己上
 
-## 两种模式
+## 三种模式
 
 **方案 A：企微全自动**
 > 客户发消息 → AI 立即回复 → 企微群通知你
 >
 > 适合量大、标准化咨询的场景
 
-**方案 B：Telegram 人工优先 ⭐ 推荐**
+**方案 B：Telegram 人工优先**
 > 客户发消息 → Telegram 通知你 → 你回复/不回复 → 5 分钟没回 AI 自动兜底
 >
 > 适合重要客户、需要人工把关的场景
+
+**方案 C：微信人工优先 ⭐ 推荐**
+> 客户发消息 → 微信通知你 → 你回复/不回复 → 5 分钟没回 AI 自动兜底
+>
+> 适合国内用户、微信重度使用者
 
 ## 怎么用？
 
@@ -60,6 +65,16 @@ cd knocket-inbox-agent
    export AI_MODEL="你的模型名"
    export KNOCKET_WORK_DIR="$(pwd)"
    nohup python3 scripts/telegram_human.py > /dev/null 2>&1 &
+
+   # 方案 C（微信）⭐ 推荐
+   export WX_BOT_TOKEN="你的 iLink Bot Token"    # OpenClaw 启动时获取
+   export WX_ADMIN_USER_ID="你的微信 User ID"     # OpenClaw 启动时获取
+   export AI_PROVIDER="anthropic"    # 或 "openai"
+   export AI_BASE_URL="你的 AI API 地址"
+   export AI_API_KEY="你的 API Key"
+   export AI_MODEL="你的模型名"
+   export KNOCKET_WORK_DIR="$(pwd)"
+   nohup python3 scripts/wechat_human.py > /dev/null 2>&1 &
    ```
 
 4. 查看日志确认运行正常：
@@ -73,6 +88,7 @@ cd knocket-inbox-agent
 - Chrome 浏览器（需用 `--remote-debugging-port=9222` 启动）
 - 方案 A 需要：企业微信群机器人 Webhook
 - 方案 B 需要：Telegram Bot Token + Chat ID
+- 方案 C 需要：OpenClaw CLI + 微信插件（`npm install -g openclaw && openclaw plugin install @tencent-weixin/openclaw-weixin`）
 
 ## 文件结构
 
@@ -83,6 +99,7 @@ knocket-inbox-agent/
 ├── scripts/
 │   ├── wecom_auto.py                # 方案 A：企微全自动
 │   ├── telegram_human.py            # 方案 B：Telegram 人工优先
+│   ├── wechat_human.py              # 方案 C：微信人工优先 ⭐
 │   └── setup.sh                     # 初始化脚本
 ├── assets/
 │   └── config.template.toml         # 配置模板

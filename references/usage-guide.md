@@ -7,11 +7,12 @@
 ## 目录
 
 1. [这是什么](#这是什么)
-2. [两种模式怎么选](#两种模式怎么选)
+2. [三种模式怎么选](#三种模式怎么选)
 3. [快速开始](#快速开始)
    - [前置准备](#前置准备)
    - [方案 A：企微全自动](#方案-a企微全自动)
    - [方案 B：Telegram 人工优先](#方案-btelegram-人工优先)
+   - [方案 C：微信人工优先](#方案-c微信人工优先)
 4. [日常使用](#日常使用)
 5. [自定义 AI 回复风格](#自定义-ai-回复风格)
 6. [常见问题排查](#常见问题排查)
@@ -33,21 +34,24 @@ Knocket Inbox Agent 是一个运行在本地的客服监控脚本。它通过 Ch
 
 ---
 
-## 两种模式怎么选
+## 三种模式怎么选
 
 > **重要：开始之前请先想好用哪种模式。** 选错了也没关系，随时可以停一个、启另一个。
 
 **一句话总结：**
 - **方案 A（企微）**：AI 先回复，再通知你回了什么。省心，但你无法事先审核。
 - **方案 B（Telegram）**：先通知你，你有 5 分钟决定怎么回。你不回，AI 再兜底。
+- **方案 C（微信）**：和方案 B 一样的人工优先模式，但通知走微信。⭐ 国内用户推荐。
 
 | 我的场景 | 推荐模式 |
 |---|---|
 | 咨询量大，问题标准化，不需要逐条过目 | **方案 A**：企微全自动 |
-| 客户重要，需要人工把关回复内容 | **方案 B**：Telegram 人工优先 ⭐ |
-| 白天人工看，晚上自动回 | **方案 B**（设个长等待时间） |
-| 先跑起来试试 | **方案 B**（能看到每条通知，心里踏实） |
-| 第一次用，不确定 | **方案 B** ⭐（推荐新手用这个，可控性更强） |
+| 客户重要，需要人工把关回复内容 | **方案 B** 或 **方案 C** |
+| 国内用户，习惯用微信 | **方案 C**：微信人工优先 ⭐ |
+| 需要翻墙才能用 Telegram | **方案 C**：微信人工优先 |
+| 白天人工看，晚上自动回 | **方案 B/C**（设个长等待时间） |
+| 先跑起来试试 | **方案 C**（微信最方便，可控性强） |
+| 第一次用，不确定 | **方案 C** ⭐（推荐新手用这个） |
 
 ---
 
@@ -183,13 +187,91 @@ tail -f inbox_monitor.log
 
 ---
 
+### 方案 C：微信人工优先
+
+**推荐模式。国内用户首选，直接在微信上操作。**
+
+#### 第一步：安装 OpenClaw + 微信插件（一次性操作，5 分钟）
+
+OpenClaw 是一个 Agent 框架，它的微信插件提供了 iLink Bot API，让脚本能通过微信收发消息。
+
+```bash
+# 1. 安装 OpenClaw CLI（需要 Node.js ≥ 16）
+npm install -g openclaw
+
+# 2. 安装微信插件
+openclaw plugin install @tencent-weixin/openclaw-weixin
+
+# 3. 启动微信网关（会弹出二维码）
+openclaw run @tencent-weixin/openclaw-weixin
+```
+
+用微信扫码登录后，终端显示：
+```
+✅ WeChat iLink Bot started
+Bot Token: accountId@im.bot:xxxxxxxx
+Your User ID: wxid_xxxxxxxx
+```
+
+**记下 Bot Token 和 Your User ID**。
+
+> **💡 提示**：OpenClaw 微信网关需要保持后台运行。建议用 `nohup openclaw run @tencent-weixin/openclaw-weixin > /dev/null 2>&1 &` 后台启动。
+
+#### 第二步：启动
+
+```bash
+# 1. 进入工作目录
+mkdir -p ~/knocket-agent && cd ~/knocket-agent
+
+# 2. 设置环境变量
+export WX_BOT_TOKEN="你的BOT_TOKEN"              # OpenClaw 启动时显示的 Bot Token
+export WX_ADMIN_USER_ID="你的USER_ID"              # OpenClaw 启动时显示的 Your User ID
+export ANTHROPIC_BASE_URL="https://你的API地址"
+export ANTHROPIC_API_KEY="你的密钥"
+export KNOCKET_WORK_DIR="$(pwd)"
+
+# 3. 启动
+nohup python3 /path/to/skill/scripts/wechat_human.py > /dev/null 2>&1 &
+echo "启动成功，PID: $!"
+
+# 4. 看日志
+tail -f inbox_monitor.log
+```
+
+启动后微信会收到 "🟢 Knocket 客服监控已启动！"。
+
+#### 第三步：日常使用
+
+有客户发消息时，你的微信会收到类似这样的通知：
+
+```
+📬 新客户消息
+
+👤 客户: 张三
+💬 新消息: 你好，请问你们的设计服务价格是多少？
+
+📋 最近对话:
+  👤客户: 你好
+  💼客服: 您好！请问有什么可以帮您？
+  👤客户: 你好，请问你们的设计服务价格是多少？
+
+⏰ 你有 5 分钟回复我该怎么回。
+直接打字告诉我回复内容即可，超时将 AI 自动回复。
+```
+
+你可以：
+- **直接回复**：比如打 `Logo 设计 3000-8000 元，品牌全案另议` → 客户就会收到这段话
+- **不回复**：5 分钟后 AI 自动回复，微信会告诉你 AI 回了什么
+
+---
+
 ## 日常使用
 
 ### 查看运行状态
 
 ```bash
 # 进程是否在跑
-ps aux | grep -E "wecom_auto|telegram_human" | grep -v grep
+ps aux | grep -E "wecom_auto|telegram_human|wechat_human" | grep -v grep
 
 # 最新日志
 tail -20 ~/knocket-agent/inbox_monitor.log
@@ -198,7 +280,7 @@ tail -20 ~/knocket-agent/inbox_monitor.log
 ### 停止
 
 ```bash
-pkill -f telegram_human  # 或 wecom_auto
+pkill -f wechat_human   # 或 telegram_human 或 wecom_auto
 ```
 
 ### 重启
@@ -216,7 +298,7 @@ cd ~/knocket-agent
 nohup python3 /path/to/skill/scripts/telegram_human.py > /dev/null 2>&1 &
 ```
 
-### 容错机制（方案 B 特有）
+### 容错机制（方案 B/C 共有）
 
 你不需要额外操心这些，它们自动运行：
 
@@ -305,6 +387,20 @@ curl -s "https://api.telegram.org/bot你的TOKEN/sendMessage" \
 
 如果报错，检查 TOKEN 和 CHAT_ID 是否正确。
 
+### 微信收不到通知
+
+```bash
+# 测试 iLink Bot 是否能发消息
+curl -s -X POST "https://ilinkai.weixin.qq.com/ilink/bot/sendmessage" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer 你的BOT_TOKEN" \
+  -d '{"user_id":"你的USER_ID","msg_type":"text","content":{"text":"test"}}'
+```
+
+如果报错：
+- 检查 OpenClaw 微信网关是否在运行（`ps aux | grep openclaw | grep -v grep`）
+- 微信登录态可能过期，需要重新 `openclaw run @tencent-weixin/openclaw-weixin` 并扫码
+
 ### 进程启动后很快退出
 
 ```bash
@@ -328,12 +424,15 @@ python3 /path/to/skill/scripts/telegram_human.py
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `CHECK_INTERVAL` | `60` | 检查间隔（秒） |
-| `HUMAN_WAIT_SECONDS` | `300` | 等人工回复超时（秒，仅方案B） |
+| `HUMAN_WAIT_SECONDS` | `300` | 等人工回复超时（秒，方案B/C） |
 | `CDP_PORT` | `9222` | Chrome 远程调试端口 |
 | `KNOCKET_WORK_DIR` | 脚本所在目录 | 工作目录（日志/状态文件存放地） |
 | `TG_BOT_TOKEN` | | Telegram Bot Token（方案B必填） |
 | `TG_CHAT_ID` | | Telegram Chat ID（方案B必填） |
-| `WECOM_WEBHOOK` | | 企业微信 Webhook URL（方案A必填，方案B可选） |
+| `WX_BOT_TOKEN` | | 微信 iLink Bot Token（方案C必填） |
+| `WX_ADMIN_USER_ID` | | 微信管理员 User ID（方案C必填） |
+| `WX_BASE_URL` | `https://ilinkai.weixin.qq.com` | iLink API 地址（方案C，一般不改） |
+| `WECOM_WEBHOOK` | | 企业微信 Webhook URL（方案A必填，B/C可选） |
 | `ANTHROPIC_BASE_URL` | | AI API 地址 |
 | `ANTHROPIC_API_KEY` | | AI API 密钥 |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | AI 模型名 |
@@ -392,6 +491,7 @@ launchctl load ~/Library/LaunchAgents/com.knocket.inbox-agent.plist
 3. **macOS 睡眠后 SPA 状态可能丢失** — 代码会自动 reload 页面，但如果登录态也没了，仍需手动干预
 4. **同名会话无法区分** — 如果两个客户显示名完全相同可能误发（实际极罕见）
 5. **Send 按钮可能 disabled** — 代码会自动 fallback 到 Enter 键发送，实测可靠
+6. **微信登录态会过期（方案C）** — OpenClaw 微信网关的登录态不是永久的，过期后需要重新扫码登录
 
 > 详细说明见 SKILL.md 中的"已知限制"章节。
 
@@ -406,22 +506,25 @@ launchctl load ~/Library/LaunchAgents/com.knocket.inbox-agent.plist
          │
          │ CDP WebSocket（后台直连，不影响你操作浏览器）
          │
-    ┌────┴─────────────────────────────────────────┐
-    │ telegram_human.py / wecom_auto.py              │
-    │                                              │
-    │  每 60 秒：                                   │
-    │  1. WebSocket 连接到 inbox 标签页             │
-    │  2. 执行 JS 获取会话列表和消息                 │
-    │  3. 比对状态文件，发现新消息                    │
-    │  4. Telegram 通知你 → 等你回复 → AI 兜底      │
-    │  5. 通过 CDP 在后台填入文字并点击发送           │
-    └──────────────────────────────────────────────┘
-         │              │              │
-    Telegram Bot   企业微信 Webhook  Anthropic API
+    ┌────┴─────────────────────────────────────────────┐
+    │ wechat_human.py / telegram_human.py /            │
+    │ wecom_auto.py                                    │
+    │                                                  │
+    │  每 60 秒：                                       │
+    │  1. WebSocket 连接到 inbox 标签页                 │
+    │  2. 执行 JS 获取会话列表和消息                     │
+    │  3. 比对状态文件，发现新消息                        │
+    │  4. 通知你 → 等你回复 → AI 兜底                   │
+    │  5. 通过 CDP 在后台填入文字并点击发送               │
+    └──────────────────────────────────────────────────┘
+         │          │              │              │
+    微信 iLink  Telegram Bot  企业微信 Webhook  Anthropic API
+    Bot (方案C)  (方案B)       (方案A)           (AI 回复)
 ```
 
 核心特点：
 - **纯 CDP WebSocket 后台操作**——不弹窗、不抢焦点、不影响你用浏览器
 - **消息签名去重**——同一条消息不会重复处理
 - **Human-in-the-loop**——重要消息人工把关，不重要的 AI 兜底
+- **三种通知渠道**——微信、Telegram、企业微信，选适合你的
 - **多层容错**——自动重连、页面 reload、会话名精确匹配、3 次重试

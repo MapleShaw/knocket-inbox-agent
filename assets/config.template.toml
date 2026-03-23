@@ -21,6 +21,23 @@ enabled = true
 # 获取方式：企业微信群 → 群设置 → 群机器人 → 添加 → 复制 Webhook 地址
 wecom_webhook = ""
 
+[wechat]
+# 微信 iLink Bot 配置（方案 C 使用）
+# 需要先安装 OpenClaw + 微信插件：
+#   npm install -g openclaw
+#   openclaw plugin install @tencent-weixin/openclaw-weixin
+#   openclaw run @tencent-weixin/openclaw-weixin
+# 扫码登录后获取以下信息
+
+# iLink Bot Token（格式: accountId@im.bot:token）
+bot_token = ""
+
+# 管理员的微信 User ID（格式: wxid_xxxxxxxx）
+admin_user_id = ""
+
+# iLink API 地址（一般不需要修改）
+base_url = "https://ilinkai.weixin.qq.com"
+
 [ai_reply]
 # 是否启用 AI 智能回复（true / false）
 # 关闭后将使用 fallback_reply 作为固定回复
