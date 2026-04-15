@@ -39,17 +39,21 @@ google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
 
 ## 坑 3：AI 调用一直报 401 / 403
 
-**原因（历史遗留）：** 原始代码里 AI 调用用的是腾讯内网专用 Header `X-Tencent-Venus-Token`，外部用户根本没有这个东西。
+**常见原因：**
+1. `AI_API_KEY` 填错或过期
+2. `AI_BASE_URL` 末尾多了 `/v1`（脚本会自动拼接 `/v1/chat/completions`，填了就变成 `/v1/v1/...`）
+3. `AI_MODEL` 模型名和 API 提供商不匹配
 
-```python
-# ❌ 旧写法（只有腾讯内网能用）
-headers={"X-Tencent-Venus-Token": API_KEY}
-
-# ✅ 新写法（标准 OpenAI 兼容）
-headers={"Authorization": f"Bearer {API_KEY}"}
+**排查步骤：**
+```bash
+# 直接用 curl 测一下 key 是否有效
+curl https://api.siliconflow.cn/v1/chat/completions \
+  -H "Authorization: Bearer $AI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-ai/DeepSeek-V3","messages":[{"role":"user","content":"hi"}]}'
 ```
 
-**解决：** 确保你用的是最新版代码（已修复），`AI_PROVIDER` 设置为 `openai`。
+**解决：** 确认 `.env` 里 `AI_PROVIDER=openai`，`AI_BASE_URL` 不带 `/v1` 后缀。
 
 ---
 
